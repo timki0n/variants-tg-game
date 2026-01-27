@@ -1,0 +1,392 @@
+{
+  "name": "Write User Variant",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "variant"
+            },
+            {
+              "name": "user_id",
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9f92850c-3bc3-4803-a041-c5236dbcd54a",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "dJYn7UF2zMW51vFR",
+          "mode": "list",
+          "cachedResultName": "VariantsWaitUsers",
+          "cachedResultUrl": "/projects/8jd96tbDs7Pn14me/datatables/dJYn7UF2zMW51vFR"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "keyValue": "={{ $json.user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        0
+      ],
+      "id": "8dd2ac7b-8a8f-48b7-987e-86fe2d43d7e7",
+      "name": "Get row(s)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "101fa25d-8ed2-42e7-b52c-b8ca15b53b6a",
+              "leftValue": "={{ $json.chat_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        496,
+        0
+      ],
+      "id": "98a97ae2-9e87-46ac-95d1-ce3803443937",
+      "name": "If game exists"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('When Executed by Another Workflow').item.json.user_id }}",
+        "text": "Ти не у грі, спочатку додай бота до жвавої групи і почни там гру командою /game",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        704,
+        96
+      ],
+      "id": "245b88fa-e879-41fc-8e0e-c002c8e14005",
+      "name": "Send a text message",
+      "webhookId": "01b729e4-e643-45ca-afbf-5248e8dbab69",
+      "credentials": {
+        "telegramApi": {
+          "id": "9lkEFqFEEj43PLlA",
+          "name": "Telegram Game Variants"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6be2676b-ac49-44ea-a7f8-91a6c7df7671",
+              "leftValue": "={{ $json.answer }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "f68459d5-11aa-45fe-96fe-e696877bad72",
+              "leftValue": "={{ $json.answer }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        704,
+        -64
+      ],
+      "id": "8256c1d4-ff12-4be3-b56b-6a21bdf47816",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('When Executed by Another Workflow').item.json.user_id }}",
+        "text": "Ти вже написав(ла) свій варіант, очікуй початку опитування у групі",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1232,
+        80
+      ],
+      "id": "4d7ad570-31aa-4f89-a54a-8fcec99e7219",
+      "name": "Send a text message1",
+      "webhookId": "01b729e4-e643-45ca-afbf-5248e8dbab69",
+      "credentials": {
+        "telegramApi": {
+          "id": "9lkEFqFEEj43PLlA",
+          "name": "Telegram Game Variants"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "dJYn7UF2zMW51vFR",
+          "mode": "list",
+          "cachedResultName": "VariantsWaitUsers",
+          "cachedResultUrl": "/projects/8jd96tbDs7Pn14me/datatables/dJYn7UF2zMW51vFR"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyValue": "={{ $('If').item.json.id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "answer": "={{ $json.text }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "answer",
+              "displayName": "answer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1344,
+        -80
+      ],
+      "id": "22b084fd-5aa6-4063-b2f8-d3725f153bab",
+      "name": "Update row(s)"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('When Executed by Another Workflow').item.json.user_id }}",
+        "text": "✅ Твою відповідь записано, очікуй початку опитування у групі",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1632,
+        -80
+      ],
+      "id": "e4959955-71bc-4446-8f15-770336a931d6",
+      "name": "Send a text message2",
+      "webhookId": "01b729e4-e643-45ca-afbf-5248e8dbab69",
+      "credentials": {
+        "telegramApi": {
+          "id": "9lkEFqFEEj43PLlA",
+          "name": "Telegram Game Variants"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $('When Executed by Another Workflow').first().json.variant || '';\n\nconst maxLength = 100;\n\nlet result = text;\n\nif (text.length > maxLength) {\n  result = text.slice(0, maxLength - 3) + '...';\n}\n\nreturn [\n  {\n    json: {\n      text: result\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        -112
+      ],
+      "id": "28ba35d0-64ce-49b9-b808-cc852069da0e",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "variant": "item",
+          "user_id": 396952666
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "If game exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If game exists": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row(s)": {
+      "main": [
+        [
+          {
+            "node": "Send a text message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Update row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "62218bda-2f4c-439f-a567-cef5ec470401",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7f221f2658e4d4e61edd49b4eb73685055b9196df0b37c635c8982bfc2dd7c0d"
+  },
+  "id": "xgUmVse3j00sLLHZ",
+  "tags": []
+}

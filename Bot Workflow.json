@@ -1,0 +1,367 @@
+{
+  "name": "Bot Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a00be1e7-f7e1-4be5-b2b0-c8890451f1bb",
+      "name": "Telegram Trigger",
+      "webhookId": "25cd78a3-576f-43b7-9ace-4c313c9fb100",
+      "credentials": {
+        "telegramApi": {
+          "id": "9lkEFqFEEj43PLlA",
+          "name": "Telegram Game Variants"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "/game",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "4376f036-399d-48c1-95cf-bfead24b949d"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "GAME"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "7ddfacea-e9dd-4bf8-90e6-5b24354fa80e",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "/^\\/start\\s+(-?\\d+)$/",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "START VARIANT"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "9b90135c-613b-4c8d-ba5e-a1419fa2450b",
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": "^.*$",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "TEXT"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "6778c08b-4ad0-4e9d-99b5-ebfb700878fd",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "bqi6V3JLgLQfkUyv",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/bqi6V3JLgLQfkUyv",
+          "cachedResultName": "Create New Game"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id": "={{ String($json.message.chat.id) }}"
+          },
+          "matchingColumns": [
+            "chat_id"
+          ],
+          "schema": [
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        464,
+        -144
+      ],
+      "id": "c86c4cf0-b5b1-45c2-bff0-1491806b6117",
+      "name": "Call 'Create New Game'"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "=***Почалася нова гра у Варіанти!***\n\n{{ $json.question }}",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Дайте відповідь тут",
+                    "additionalFields": {
+                      "url": "=https://t.me/variantsgg_bot?start={{ $json.chat_id }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        -144
+      ],
+      "id": "b263598e-00de-47f1-9711-6e8f0c7f34e5",
+      "name": "Send a text message",
+      "webhookId": "a2ebb352-92df-4c55-bc52-ab8fe4f7a5b7",
+      "credentials": {
+        "telegramApi": {
+          "id": "9lkEFqFEEj43PLlA",
+          "name": "Telegram Game Variants"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "aSbDrjKioj414ef5",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/aSbDrjKioj414ef5",
+          "cachedResultName": "Start Give Variant"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "user_id": "={{ $json.message.from.id }}",
+            "message_text": "={{ $json.message.text }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "message_text",
+              "displayName": "message_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        464,
+        48
+      ],
+      "id": "16b388db-6383-4d0d-ba6a-7284c220604e",
+      "name": "Call 'Start Give Variant'"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "xgUmVse3j00sLLHZ",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/xgUmVse3j00sLLHZ",
+          "cachedResultName": "Write User Variant"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "variant": "={{ $('Telegram Trigger').item.json.message.text }}",
+            "user_id": "={{ $('Telegram Trigger').item.json.message.from.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "variant",
+              "displayName": "variant",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        448,
+        192
+      ],
+      "id": "dd4b11aa-f954-4453-a707-0cd3a2a5b1b9",
+      "name": "Call 'Write User Variant'"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Call 'Create New Game'",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 'Start Give Variant'",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 'Write User Variant'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Create New Game'": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "d060fdb1-274d-40f5-8051-4353730e64a6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7f221f2658e4d4e61edd49b4eb73685055b9196df0b37c635c8982bfc2dd7c0d"
+  },
+  "id": "b1SXACyGj99e10Yk",
+  "tags": []
+}

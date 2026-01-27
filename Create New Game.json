@@ -1,0 +1,276 @@
+{
+  "name": "Create New Game",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://uselessfacts.jsph.pl/api/v2/facts/random",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "f3a9a78c-2419-4ab1-96e4-4e5f196f6d32",
+      "name": "GET FACT"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "chat_id"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "72ac2c35-a634-4a55-8868-90ac81aa5953",
+      "name": "EntryPoint"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "dataTableId": {
+          "__rl": true,
+          "value": "dMHJcsKFpvpszJFI",
+          "mode": "list",
+          "cachedResultName": "VariantsGames",
+          "cachedResultUrl": "/projects/8jd96tbDs7Pn14me/datatables/dMHJcsKFpvpszJFI"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "chat_id",
+              "keyValue": "={{ $('EntryPoint').item.json.chat_id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "in_progress": true,
+            "chat_id": "={{ $('EntryPoint').item.json.chat_id }}",
+            "question": "={{ $json.output.question }}",
+            "answers": "={ \"__ai__\": \"{{ $json.output.answer }}\"}",
+            "fact": "={{ $json.output.fact }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "question",
+              "displayName": "question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "answers",
+              "displayName": "answers",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "in_progress",
+              "displayName": "in_progress",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "fact",
+              "displayName": "fact",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1216,
+        0
+      ],
+      "id": "be7b5138-d306-49cf-852f-d19fb98688e2",
+      "name": "Upsert row(s)"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Ти генеруєш навчальні питання українською мовою.\n\nСтвори ОДНЕ питання на основі наданого факту та правильну відповідь до нього. Запиши також факт українською.\n\nВимоги до відповіді (answer):\n\nтільки словесна коротка відповідь\n\nМаксимум 5 слів\n\nНЕ використовуй:\n\n«так» / «ні» / «є» / «немає»\n\nчисла\n\nдати\n\nвідповідь має бути написана людяно, як в чаті, без дифісів, часто з малої або великої літери.\n\nвідповідь має бути конкретною (місто, ім’я, назва, дія, об’єкт тощо)\n\nФормат відповіді — СТРОГО за JSON Schema, без додаткового тексту.\n\n--ФАКТ--\n{{ $json.text }}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        656,
+        0
+      ],
+      "id": "724376cf-4de2-4a6a-a2a7-1d135939df2f",
+      "name": "AI Agent",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        512,
+        208
+      ],
+      "id": "d697223a-3dc5-4e3d-9886-2a558b86ab98",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "90QNhLj8URlRP53q",
+          "name": "VariantsGame Api Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"question\": \"У якому місті була заснована перша у світі фондова біржа?\",\n  \"fact\": \"У амстердамі була заснована перша у світі фондова біржа.\",\n  \"answer\": \"Амстердам\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        832,
+        208
+      ],
+      "id": "a11c2c77-a07f-45ba-8097-ed7253b0d6d8",
+      "name": "Structured Output Parser"
+    }
+  ],
+  "pinData": {
+    "EntryPoint": [
+      {
+        "json": {
+          "chat_id": "396952666"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "GET FACT": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EntryPoint": {
+      "main": [
+        [
+          {
+            "node": "GET FACT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Upsert row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "f0b07ee3-57fd-420c-85e8-a201736be9b7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7f221f2658e4d4e61edd49b4eb73685055b9196df0b37c635c8982bfc2dd7c0d"
+  },
+  "id": "bqi6V3JLgLQfkUyv",
+  "tags": []
+}

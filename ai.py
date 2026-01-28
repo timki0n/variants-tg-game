@@ -32,7 +32,7 @@ SYSTEM_PROMPT = """Ти генеруєш навчальні питання ук�
 async def generate_question(fact_text: str) -> GeneratedQuestion:
     """Генерує питання на основі факту через OpenAI."""
     response = await client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-5-mini",
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": f"--ФАКТ--\n{fact_text}"}

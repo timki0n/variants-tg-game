@@ -441,12 +441,6 @@ async def callback_new_game(callback: CallbackQuery) -> None:
     
     await callback.answer()
     
-    # Видаляємо кнопку з повідомлення
-    try:
-        await callback.message.edit_reply_markup(reply_markup=None)
-    except Exception:
-        pass
-    
     # Повідомляємо що гра створюється
     status_msg = await bot.send_message(
         chat_id=int(chat_id),

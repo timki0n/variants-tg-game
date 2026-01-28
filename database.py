@@ -54,6 +54,15 @@ class UserScore:
     score: int
 
 
+@dataclass
+class DailyScore:
+    id: int
+    chat_id: str
+    user_id: int
+    score: int
+    date: str
+
+
 async def init_db() -> None:
     """Ініціалізує базу даних та створює таблиці."""
     async with aiosqlite.connect(DATABASE_PATH) as db:
@@ -110,6 +119,16 @@ async def init_db() -> None:
                 user_id INTEGER NOT NULL,
                 score INTEGER DEFAULT 0,
                 UNIQUE(chat_id, user_id)
+            )
+        """)
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS daily_scores (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                chat_id TEXT NOT NULL,
+                user_id INTEGER NOT NULL,
+                score INTEGER DEFAULT 0,
+                date TEXT NOT NULL,
+                UNIQUE(chat_id, user_id, date)
             )
         """)
         await db.commit()
@@ -388,14 +407,23 @@ async def get_poll_votes(chat_id: str) -> list[PollVote]:
 # ============ User Scores ============
 
 async def add_user_score(chat_id: str, user_id: int, points: int) -> None:
-    """Додає бали користувачу."""
+    """Додає бали користувачу (загальні та денні)."""
+    today = datetime.now().strftime("%Y-%m-%d")
     async with aiosqlite.connect(DATABASE_PATH) as db:
+        # Загальний рейтинг
         await db.execute("""
             INSERT INTO user_scores (chat_id, user_id, score)
             VALUES (?, ?, ?)
             ON CONFLICT(chat_id, user_id) DO UPDATE SET
                 score = score + excluded.score
         """, (chat_id, user_id, points))
+        # Денний рейтинг
+        await db.execute("""
+            INSERT INTO daily_scores (chat_id, user_id, score, date)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(chat_id, user_id, date) DO UPDATE SET
+                score = score + excluded.score
+        """, (chat_id, user_id, points, today))
         await db.commit()
 
 
@@ -425,6 +453,28 @@ async def get_leaderboard(chat_id: str, limit: int = 10) -> list[UserScore]:
                     chat_id=row["chat_id"],
                     user_id=row["user_id"],
                     score=row["score"]
+                )
+                for row in rows
+            ]
+
+
+async def get_daily_top_players(chat_id: str, limit: int = 3) -> list[DailyScore]:
+    """Отримує топ гравців за сьогодні."""
+    today = datetime.now().strftime("%Y-%m-%d")
+    async with aiosqlite.connect(DATABASE_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        async with db.execute(
+            "SELECT * FROM daily_scores WHERE chat_id = ? AND date = ? ORDER BY score DESC LIMIT ?",
+            (chat_id, today, limit)
+        ) as cursor:
+            rows = await cursor.fetchall()
+            return [
+                DailyScore(
+                    id=row["id"],
+                    chat_id=row["chat_id"],
+                    user_id=row["user_id"],
+                    score=row["score"],
+                    date=row["date"]
                 )
                 for row in rows
             ]

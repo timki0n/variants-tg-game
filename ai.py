@@ -37,8 +37,7 @@ async def generate_question(fact_text: str) -> GeneratedQuestion:
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": f"--ФАКТ--\n{fact_text}"}
         ],
-        response_format={"type": "json_object"},
-        temperature=0.7
+        response_format={"type": "json_object"}
     )
     
     content = response.choices[0].message.content

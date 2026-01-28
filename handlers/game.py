@@ -304,7 +304,7 @@ async def finish_voting_phase(bot: Bot, chat_id: str, poll_message_id: int) -> N
         for user_id in correct_voters:
             mention = await get_user_mention(bot, user_id)
             mentions.append(mention)
-        result_text += f"({', '.join(mentions)}) +2 бали\n\n"
+        result_text += f"({', '.join(mentions)}) {format_points(2)}\n\n"
     else:
         result_text += "(ніхто не вгадав)\n\n"
     
@@ -318,15 +318,15 @@ async def finish_voting_phase(bot: Bot, chat_id: str, poll_message_id: int) -> N
         voters = [v for v in all_voters if v != option.author_user_id]
         points_earned = len(voters)  # +1 бал за кожен голос від інших
         
-        result_text += f"— {author_mention}: \"{option.option_text}\"\n"
         if voters:
+            result_text += f"— {author_mention}: \"{option.option_text}\" {format_points(points_earned)}\n"
             voter_mentions = []
             for voter_id in voters:
                 voter_mention = await get_user_mention(bot, voter_id)
                 voter_mentions.append(voter_mention)
-            result_text += f"({', '.join(voter_mentions)}) {format_points(points_earned)}\n\n"
+            result_text += f"({', '.join(voter_mentions)})\n\n"
         else:
-            result_text += "(немає відповідей)\n\n"
+            result_text += f"— {author_mention}: \"{option.option_text}\"\n\n"
     
     result_text += f"💡 Факт: {game.fact}"
     

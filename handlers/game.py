@@ -24,7 +24,7 @@ from ai import generate_question
 router = Router()
 
 FACTS_API_URL = "https://uselessfacts.jsph.pl/api/v2/facts/random"
-GAME_COOLDOWN = 10  # секунд між іграми
+GAME_COOLDOWN = 60  # секунд між іграми
 COLLECTING_DURATION = 70  # тривалість збору відповідей (1.5 хвилини)
 VOTING_DURATION = 30  # тривалість голосування (1 хвилина)
 UPDATE_INTERVAL = 10  # інтервал оновлення повідомлення

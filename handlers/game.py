@@ -3,7 +3,7 @@ import asyncio
 import random
 import httpx
 from aiogram import Router, F, Bot
-from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command
 from aiogram.enums import ChatType
 
@@ -330,38 +330,38 @@ async def finish_voting_phase(bot: Bot, chat_id: str, poll_message_id: int) -> N
     
     result_text += f"💡 Факт: {game.fact}"
     
+    # Кнопка для нової гри
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🎮 Го ще одну", callback_data="new_game")]
+    ])
+    
     await bot.send_message(
         chat_id=int(chat_id),
         text=result_text,
+        reply_markup=keyboard,
         parse_mode="Markdown"
     )
 
 
-@router.message(Command("game"), F.chat.type.in_({ChatType.GROUP, ChatType.SUPERGROUP}))
-async def cmd_game(message: Message) -> None:
-    """Обробник команди /game - створює нову гру."""
-    chat_id = str(message.chat.id)
-    bot = message.bot
-    
-    # Перевіряємо кулдаун
+def check_cooldown(chat_id: str) -> int | None:
+    """Перевіряє cooldown. Повертає залишок секунд або None якщо можна грати."""
     current_time = time.time()
     last_time = _last_game_time.get(chat_id, 0)
     time_passed = current_time - last_time
     
     if time_passed < GAME_COOLDOWN:
-        remaining = int(GAME_COOLDOWN - time_passed)
-        await message.answer(f"⏱ Зачекайте ще {remaining} сек. перед створенням нової гри.")
-        return
-    
+        return int(GAME_COOLDOWN - time_passed)
+    return None
+
+
+async def start_new_game(bot: Bot, chat_id: str, status_msg: Message) -> None:
+    """Створює нову гру."""
     # Скасовуємо попередній таймер якщо він існує
     if chat_id in _active_timers:
         _active_timers[chat_id].cancel()
     
     # Оновлюємо час останньої гри
-    _last_game_time[chat_id] = current_time
-    
-    # Повідомляємо що гра створюється
-    status_msg = await message.answer("⏳ Створюю нову гру...")
+    _last_game_time[chat_id] = time.time()
     
     try:
         # Отримуємо факт
@@ -381,8 +381,9 @@ async def cmd_game(message: Message) -> None:
             )]
         ])
         
-        game_msg = await message.answer(
-            build_collecting_message(question_data.question, COLLECTING_DURATION),
+        game_msg = await bot.send_message(
+            chat_id=int(chat_id),
+            text=build_collecting_message(question_data.question, COLLECTING_DURATION),
             reply_markup=keyboard,
             parse_mode="Markdown"
         )
@@ -404,3 +405,42 @@ async def cmd_game(message: Message) -> None:
         
     except Exception as e:
         await status_msg.edit_text(f"❌ Помилка при створенні гри: {e}")
+
+
+@router.message(Command("game"), F.chat.type.in_({ChatType.GROUP, ChatType.SUPERGROUP}))
+async def cmd_game(message: Message) -> None:
+    """Обробник команди /game - створює нову гру."""
+    chat_id = str(message.chat.id)
+    bot = message.bot
+    
+    # Перевіряємо кулдаун
+    remaining = check_cooldown(chat_id)
+    if remaining:
+        await message.answer(f"⏱ Зачекайте ще {remaining} сек. перед створенням нової гри.")
+        return
+    
+    # Повідомляємо що гра створюється
+    status_msg = await message.answer("⏳ Створюю нову гру...")
+    await start_new_game(bot, chat_id, status_msg)
+
+
+@router.callback_query(F.data == "new_game")
+async def callback_new_game(callback: CallbackQuery) -> None:
+    """Обробник кнопки 'Нова гра'."""
+    chat_id = str(callback.message.chat.id)
+    bot = callback.bot
+    
+    # Перевіряємо кулдаун
+    remaining = check_cooldown(chat_id)
+    if remaining:
+        await callback.answer(f"⏱ Зачекайте ще {remaining} сек.", show_alert=True)
+        return
+    
+    await callback.answer()
+    
+    # Повідомляємо що гра створюється
+    status_msg = await bot.send_message(
+        chat_id=int(chat_id),
+        text="⏳ Створюю нову гру..."
+    )
+    await start_new_game(bot, chat_id, status_msg)
